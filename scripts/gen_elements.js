@@ -1,0 +1,148 @@
+// Generates js/elements-data.js — the full 118-element periodic table dataset
+// with standard grid positions (period/group), categories, and cosmic-origin tags.
+const fs = require('fs');
+
+// [Z, symbol, name, period, group, category]
+// group 0 = lanthanide row placeholder position handled separately
+const raw = [
+[1,"H","Hydrogen",1,1,"nonmetal"],
+[2,"He","Helium",1,18,"noble"],
+[3,"Li","Lithium",2,1,"alkali"],
+[4,"Be","Beryllium",2,2,"alkaline"],
+[5,"B","Boron",2,13,"metalloid"],
+[6,"C","Carbon",2,14,"nonmetal"],
+[7,"N","Nitrogen",2,15,"nonmetal"],
+[8,"O","Oxygen",2,16,"nonmetal"],
+[9,"F","Fluorine",2,17,"halogen"],
+[10,"Ne","Neon",2,18,"noble"],
+[11,"Na","Sodium",3,1,"alkali"],
+[12,"Mg","Magnesium",3,2,"alkaline"],
+[13,"Al","Aluminium",3,13,"posttransition"],
+[14,"Si","Silicon",3,14,"metalloid"],
+[15,"P","Phosphorus",3,15,"nonmetal"],
+[16,"S","Sulfur",3,16,"nonmetal"],
+[17,"Cl","Chlorine",3,17,"halogen"],
+[18,"Ar","Argon",3,18,"noble"],
+[19,"K","Potassium",4,1,"alkali"],
+[20,"Ca","Calcium",4,2,"alkaline"],
+[21,"Sc","Scandium",4,3,"transition"],
+[22,"Ti","Titanium",4,4,"transition"],
+[23,"V","Vanadium",4,5,"transition"],
+[24,"Cr","Chromium",4,6,"transition"],
+[25,"Mn","Manganese",4,7,"transition"],
+[26,"Fe","Iron",4,8,"transition"],
+[27,"Co","Cobalt",4,9,"transition"],
+[28,"Ni","Nickel",4,10,"transition"],
+[29,"Cu","Copper",4,11,"transition"],
+[30,"Zn","Zinc",4,12,"transition"],
+[31,"Ga","Gallium",4,13,"posttransition"],
+[32,"Ge","Germanium",4,14,"metalloid"],
+[33,"As","Arsenic",4,15,"metalloid"],
+[34,"Se","Selenium",4,16,"nonmetal"],
+[35,"Br","Bromine",4,17,"halogen"],
+[36,"Kr","Krypton",4,18,"noble"],
+[37,"Rb","Rubidium",5,1,"alkali"],
+[38,"Sr","Strontium",5,2,"alkaline"],
+[39,"Y","Yttrium",5,3,"transition"],
+[40,"Zr","Zirconium",5,4,"transition"],
+[41,"Nb","Niobium",5,5,"transition"],
+[42,"Mo","Molybdenum",5,6,"transition"],
+[43,"Tc","Technetium",5,7,"transition"],
+[44,"Ru","Ruthenium",5,8,"transition"],
+[45,"Rh","Rhodium",5,9,"transition"],
+[46,"Pd","Palladium",5,10,"transition"],
+[47,"Ag","Silver",5,11,"transition"],
+[48,"Cd","Cadmium",5,12,"transition"],
+[49,"In","Indium",5,13,"posttransition"],
+[50,"Sn","Tin",5,14,"posttransition"],
+[51,"Sb","Antimony",5,15,"metalloid"],
+[52,"Te","Tellurium",5,16,"metalloid"],
+[53,"I","Iodine",5,17,"halogen"],
+[54,"Xe","Xenon",5,18,"noble"],
+[55,"Cs","Caesium",6,1,"alkali"],
+[56,"Ba","Barium",6,2,"alkaline"],
+[57,"La","Lanthanum",8,3,"lanthanide"],
+[58,"Ce","Cerium",8,4,"lanthanide"],
+[59,"Pr","Praseodymium",8,5,"lanthanide"],
+[60,"Nd","Neodymium",8,6,"lanthanide"],
+[61,"Pm","Promethium",8,7,"lanthanide"],
+[62,"Sm","Samarium",8,8,"lanthanide"],
+[63,"Eu","Europium",8,9,"lanthanide"],
+[64,"Gd","Gadolinium",8,10,"lanthanide"],
+[65,"Tb","Terbium",8,11,"lanthanide"],
+[66,"Dy","Dysprosium",8,12,"lanthanide"],
+[67,"Ho","Holmium",8,13,"lanthanide"],
+[68,"Er","Erbium",8,14,"lanthanide"],
+[69,"Tm","Thulium",8,15,"lanthanide"],
+[70,"Yb","Ytterbium",8,16,"lanthanide"],
+[71,"Lu","Lutetium",8,17,"lanthanide"],
+[72,"Hf","Hafnium",6,4,"transition"],
+[73,"Ta","Tantalum",6,5,"transition"],
+[74,"W","Tungsten",6,6,"transition"],
+[75,"Re","Rhenium",6,7,"transition"],
+[76,"Os","Osmium",6,8,"transition"],
+[77,"Ir","Iridium",6,9,"transition"],
+[78,"Pt","Platinum",6,10,"transition"],
+[79,"Au","Gold",6,11,"transition"],
+[80,"Hg","Mercury",6,12,"transition"],
+[81,"Tl","Thallium",6,13,"posttransition"],
+[82,"Pb","Lead",6,14,"posttransition"],
+[83,"Bi","Bismuth",6,15,"posttransition"],
+[84,"Po","Polonium",6,16,"posttransition"],
+[85,"At","Astatine",6,17,"halogen"],
+[86,"Rn","Radon",6,18,"noble"],
+[87,"Fr","Francium",7,1,"alkali"],
+[88,"Ra","Radium",7,2,"alkaline"],
+[89,"Ac","Actinium",9,3,"actinide"],
+[90,"Th","Thorium",9,4,"actinide"],
+[91,"Pa","Protactinium",9,5,"actinide"],
+[92,"U","Uranium",9,6,"actinide"],
+[93,"Np","Neptunium",9,7,"actinide"],
+[94,"Pu","Plutonium",9,8,"actinide"],
+[95,"Am","Americium",9,9,"actinide"],
+[96,"Cm","Curium",9,10,"actinide"],
+[97,"Bk","Berkelium",9,11,"actinide"],
+[98,"Cf","Californium",9,12,"actinide"],
+[99,"Es","Einsteinium",9,13,"actinide"],
+[100,"Fm","Fermium",9,14,"actinide"],
+[101,"Md","Mendelevium",9,15,"actinide"],
+[102,"No","Nobelium",9,16,"actinide"],
+[103,"Lr","Lawrencium",9,17,"actinide"],
+[104,"Rf","Rutherfordium",7,4,"transition"],
+[105,"Db","Dubnium",7,5,"transition"],
+[106,"Sg","Seaborgium",7,6,"transition"],
+[107,"Bh","Bohrium",7,7,"transition"],
+[108,"Hs","Hassium",7,8,"transition"],
+[109,"Mt","Meitnerium",7,9,"transition"],
+[110,"Ds","Darmstadtium",7,10,"transition"],
+[111,"Rg","Roentgenium",7,11,"transition"],
+[112,"Cn","Copernicium",7,12,"transition"],
+[113,"Nh","Nihonium",7,13,"posttransition"],
+[114,"Fl","Flerovium",7,14,"posttransition"],
+[115,"Mc","Moscovium",7,15,"posttransition"],
+[116,"Lv","Livermorium",7,16,"posttransition"],
+[117,"Ts","Tennessine",7,17,"halogen"],
+[118,"Og","Oganesson",7,18,"noble"],
+];
+
+// Cosmic origin classification, used to drive discovery/illumination logic.
+// bbn = Big Bang nucleosynthesis, star = stellar fusion (light/intermediate),
+// massive = massive-star advanced fusion up to iron group,
+// rprocess = neutron-capture (mergers / extreme environments), synthetic = human-made only.
+function origin(z){
+  if ([1,2,3].includes(z)) return "bbn";
+  if (z>=4 && z<=26) return "star"; // up to iron
+  if (z>=27 && z<=33) return "massive"; // iron-group / explosive burning neighborhood
+  if (z>=93) return "synthetic";
+  return "rprocess"; // everything heavier than the iron-group region, broadly neutron-capture built
+}
+
+const elements = raw.map(([z,sym,name,period,group,category])=>({
+  z, sym, name, period, group, category, origin: origin(z)
+}));
+
+const out = "// AUTO-GENERATED by scripts/gen_elements.js — do not hand-edit.\n" +
+  "window.ELEMENTS = " + JSON.stringify(elements, null, 2) + ";\n";
+
+fs.writeFileSync(__dirname + "/../js/elements-data.js", out);
+console.log("wrote", elements.length, "elements");
