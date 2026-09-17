@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Cosmic Elements Journey — How Old Is Gold?</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="An interactive cosmic journey: become the universe, forge the elements, and discover how gold was made." />
+<link rel="icon" href="data:," />
+<link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- Persistent 3D cosmic environment -->
+  <canvas id="scene-canvas"></canvas>
+  <div id="vignette"></div>
+
+  <!-- ============== INTRO CINEMATIC ============== -->
+  <div id="intro-root" class="overlay-layer interactive">
+    <div class="cine-stack" id="intro-stack"></div>
+    <div class="flash-symbols" id="flash-symbols"></div>
+    <div id="intro-ptable" class="ptable-wrap intro-table" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); opacity:0; transition:opacity 1.6s ease;"></div>
+  </div>
+  <button id="skip-intro">Skip Intro ›</button>
+
+  <!-- ============== TOP CONTROLS (mode + mute) ============== -->
+  <div id="top-controls">
+    <div class="pill-toggle" id="mode-toggle">
+      <button data-mode="story" class="active">Story</button>
+      <button data-mode="science">Science</button>
+    </div>
+    <div class="icon-btn" id="mute-btn" title="Mute / unmute ambient sound">♪</div>
+  </div>
+
+  <!-- ============== COSMIC FORGE / LAB ============== -->
+  <div id="lab-root">
+    <div class="lab-header">
+      <h1>You Are The Universe</h1>
+      <p>Choose cosmic objects. Combine them. See what elements you can create.</p>
+    </div>
+
+    <div id="object-library" class="panel">
+      <div class="lib-title">Cosmic Objects</div>
+      <!-- populated by js -->
+    </div>
+
+    <div id="target-panel" class="panel">
+      <div class="tp-title">What Do You Want To Create?</div>
+      <div class="target-grid" id="target-grid"></div>
+      <div class="target-focus" id="target-focus"></div>
+      <button id="hint-btn">Need a hint?</button>
+      <div id="hint-text"></div>
+    </div>
+
+    <div id="question-banner">
+      <h2 id="question-banner-text">What do you want to create?</h2>
+    </div>
+
+    <div class="extreme-tag" id="extreme-tag">
+      <div>Extreme System Detected</div>
+      <div class="conditions-preview">
+        <div><b>Density</b>Extreme</div>
+        <div><b>Gravity</b>Extreme</div>
+        <div><b>Neutron-rich matter</b>Extreme</div>
+        <div><b>Heavy-element potential</b>High</div>
+      </div>
+    </div>
+
+    <div id="forge-slots" class="panel">
+      <div class="slot" id="slot-a" data-slot="a">
+        <div class="slot-label">Object / Event A</div>
+        <div class="placeholder">+</div>
+      </div>
+      <div class="slot-op" id="slot-op">+</div>
+      <div class="slot" id="slot-b" data-slot="b">
+        <div class="slot-label">Object / Event B</div>
+        <div class="placeholder">+</div>
+      </div>
+      <div class="slot-op">=</div>
+      <div class="slot" id="slot-result" style="border-style:dotted; cursor:default;">
+        <div class="placeholder">?</div>
+      </div>
+    </div>
+
+    <div style="position:absolute; left:50%; bottom:80px; transform:translateX(-50%);">
+      <button id="activate-btn" disabled>Activate</button>
+    </div>
+
+    <div id="discovered-ticker" class="panel">
+      <span>Discovered:</span>
+      <span id="discovered-list"><b>H</b> <b>He</b> <b>Li</b></span>
+    </div>
+
+    <div class="ptable-panel">
+      <div class="ptitle"><span>Discovery Map</span> <b id="ptable-count">3 / 118</b></div>
+      <div class="ptable-wrap" id="lab-ptable"></div>
+    </div>
+  </div>
+
+  <!-- ============== FULL-SCREEN EXPERIMENT VISUALIZATION ============== -->
+  <div id="experiment-root">
+    <div class="exp-caption" id="exp-caption">
+      <div class="line1" id="exp-caption-1"></div>
+      <div class="line2" id="exp-caption-2"></div>
+    </div>
+    <div id="exp-body"></div>
+  </div>
+
+  <div id="fade-veil"></div>
+  <div id="elem-tooltip" class="elem-tooltip"></div>
+
+</div>
+
+<script src="js/vendor/three.min.js"></script>
+<script src="js/elements-data.js"></script>
+<script src="js/starfield.js"></script>
+<script src="js/periodic-table.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/intro.js"></script>
+<script src="js/lab.js"></script>
+<script src="js/experiments.js"></script>
+<script src="js/merger.js"></script>
+<script src="js/gold-journey.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
