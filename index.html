@@ -36,7 +36,7 @@
   <div id="lab-root">
     <div class="lab-header">
       <h1>You Are The Universe</h1>
-      <p>Choose cosmic objects. Combine them. See what elements you can create.</p>
+      <p>Choose cosmic objects. Combine them. Fill the periodic table with everything the cosmos can build.</p>
     </div>
 
     <div id="object-library" class="panel">
@@ -45,7 +45,7 @@
     </div>
 
     <div id="target-panel" class="panel">
-      <div class="tp-title">What Do You Want To Create?</div>
+      <div class="tp-title">Aim For An Element (optional)</div>
       <div class="target-grid" id="target-grid"></div>
       <div class="target-focus" id="target-focus"></div>
       <button id="hint-btn">Need a hint?</button>
@@ -56,29 +56,31 @@
       <h2 id="question-banner-text">What do you want to create?</h2>
     </div>
 
-    <div class="extreme-tag" id="extreme-tag">
-      <div>Extreme System Detected</div>
-      <div class="conditions-preview">
-        <div><b>Density</b>Extreme</div>
-        <div><b>Gravity</b>Extreme</div>
-        <div><b>Neutron-rich matter</b>Extreme</div>
-        <div><b>Heavy-element potential</b>High</div>
+    <div id="forge-wrap">
+      <div class="extreme-tag" id="extreme-tag">
+        <div>Extreme System Detected</div>
+        <div class="conditions-preview">
+          <div><b>Density</b>Extreme</div>
+          <div><b>Gravity</b>Extreme</div>
+          <div><b>Neutron-rich matter</b>Extreme</div>
+          <div><b>Heavy-element potential</b>High</div>
+        </div>
       </div>
-    </div>
 
-    <div id="forge-slots" class="panel">
-      <div class="slot" id="slot-a" data-slot="a">
-        <div class="slot-label">Object / Event A</div>
-        <div class="placeholder">+</div>
-      </div>
-      <div class="slot-op" id="slot-op">+</div>
-      <div class="slot" id="slot-b" data-slot="b">
-        <div class="slot-label">Object / Event B</div>
-        <div class="placeholder">+</div>
-      </div>
-      <div class="slot-op">=</div>
-      <div class="slot" id="slot-result" style="border-style:dotted; cursor:default;">
-        <div class="placeholder">?</div>
+      <div id="forge-slots" class="panel">
+        <div class="slot" id="slot-a" data-slot="a">
+          <div class="slot-label">Object / Event A</div>
+          <div class="placeholder">+</div>
+        </div>
+        <div class="slot-op" id="slot-op">+</div>
+        <div class="slot" id="slot-b" data-slot="b">
+          <div class="slot-label">Object / Event B</div>
+          <div class="placeholder">+</div>
+        </div>
+        <div class="slot-op">=</div>
+        <div class="slot" id="slot-result" style="border-style:dotted; cursor:default;">
+          <div class="placeholder">?</div>
+        </div>
       </div>
     </div>
 

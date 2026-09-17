@@ -206,7 +206,7 @@ html, body{
   opacity:0; transition: opacity 1.3s ease;
 }
 #lab-root.active{ opacity:1; pointer-events:auto; }
-#lab-root.dimmed{ opacity:0.15; pointer-events:none; }
+#lab-root.dimmed{ opacity:0; pointer-events:none; }
 
 .lab-header{
   position:absolute; top: 20px; left:50%; transform:translateX(-50%);
@@ -248,6 +248,11 @@ html, body{
 }
 .cosmic-obj:hover{ background: rgba(111,168,255,0.08); border-color: var(--accent-soft); transform: translateX(2px); }
 .cosmic-obj.selected{ background: rgba(111,168,255,0.16); border-color: var(--accent); }
+.cosmic-obj.hint-glow{ animation: hintPulse 1.3s ease infinite; border-color: var(--gold); }
+@keyframes hintPulse{
+  0%, 100%{ box-shadow: 0 0 0 rgba(244,201,106,0.0); }
+  50%{ box-shadow: 0 0 16px rgba(244,201,106,0.55); }
+}
 .cosmic-obj .glyph{
   width: 30px; height:30px; border-radius:50%; flex:0 0 auto;
   background: radial-gradient(circle at 35% 30%, #fff, var(--accent) 40%, #1a3a7a 100%);
@@ -268,8 +273,11 @@ html, body{
 .g-gas{ background: radial-gradient(ellipse at 40% 40%, rgba(160,120,255,0.9), rgba(60,30,120,0.4) 60%, transparent 100%); box-shadow:0 0 16px rgba(150,110,255,0.4); }
 
 /* Slots */
-#forge-slots{
+#forge-wrap{
   position:absolute; left:50%; bottom: 150px; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap: 10px;
+}
+#forge-slots{
   display:flex; align-items:center; gap: 18px;
   padding: 14px 20px; border-radius:18px;
 }
@@ -300,12 +308,13 @@ html, body{
 #activate-btn.merge{ border-color: var(--extreme); background: linear-gradient(135deg, rgba(255,93,143,0.3), rgba(255,93,143,0.08)); box-shadow:0 0 24px rgba(255,93,143,0.35); }
 
 .extreme-tag{
-  position:absolute; left:50%; bottom: 250px; transform:translateX(-50%);
   font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color: var(--extreme);
-  opacity:0; transition: opacity .5s ease; text-shadow:0 0 14px rgba(255,93,143,0.6);
+  opacity:0; max-height:0; overflow:hidden;
+  transition: opacity .4s ease, max-height .4s ease, margin .4s ease;
+  text-shadow:0 0 14px rgba(255,93,143,0.6);
   display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none;
 }
-.extreme-tag.show{ opacity:1; }
+.extreme-tag.show{ opacity:1; max-height:80px; margin-bottom:2px; }
 .conditions-preview{
   display:flex; gap:14px; font-size:10px; color:var(--ink-dim); text-transform:none; letter-spacing:0.02em;
   background: rgba(255,93,143,0.08); border:1px solid rgba(255,93,143,0.3); border-radius:10px; padding:8px 14px;
@@ -319,6 +328,11 @@ html, body{
 }
 #target-panel .tp-title{ font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-faint); }
 .target-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:6px; }
+.target-chip.explore-chip{
+  grid-column: 1 / -1; display:flex; align-items:center; justify-content:center; gap:8px;
+  padding: 9px 6px;
+}
+.target-chip.explore-chip b{ display:inline; font-size:14px; }
 .target-chip{
   padding: 8px 4px; border-radius:8px; text-align:center; cursor:pointer;
   border:1px solid var(--panel-border); background: rgba(255,255,255,0.02);
@@ -354,7 +368,7 @@ html, body{
 
 /* Question banner */
 #question-banner{
-  position:absolute; left:50%; bottom: 300px; transform:translateX(-50%);
+  position:absolute; left:50%; bottom: 335px; transform:translateX(-50%);
   text-align:center; pointer-events:none;
 }
 #question-banner h2{
@@ -579,7 +593,8 @@ body.science-mode .science-only.inline{ display:inline; }
   #object-library{ display:none; }
   #target-panel{ width: 150px; }
   .slot{ width:80px; height:74px; }
-  #forge-slots{ gap:10px; padding:10px 12px; bottom: 190px; }
+  #forge-wrap{ bottom: 190px; }
+  #forge-slots{ gap:10px; padding:10px 12px; }
   .ptable-panel{ width: 74vw; }
   .lab-header p{ display:none; }
 }

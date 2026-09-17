@@ -44,10 +44,16 @@
     const earth = earthSprite();
     await sleep(2200);
 
-    // HOW OLD IS GOLD
+    // HOW OLD IS GOLD — the one moment this whole journey has been building
+    // toward: a closing "imagine" aside, not the app's whole point.
     clearBodyKeep(earth);
     ExpUI.caption('HOW OLD IS GOLD?', '');
     await sleep(1400);
+    const imagine = el('div','cine-text mid show', 'Imagine: the gold in your jewelry could be this old.');
+    imagine.style.top = '42%';
+    body().appendChild(imagine);
+    await sleep(2400);
+    imagine.remove();
     const compare = el('div','age-compare');
     compare.innerHTML = `
       <div class="age-card"><div class="age-label">Earth</div><div class="age-val">~4.54 Billion Years</div></div>

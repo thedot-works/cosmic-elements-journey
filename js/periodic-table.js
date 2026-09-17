@@ -16,6 +16,7 @@
     discovered: new Set([1,2,3]), // H, He, Li known from the start (Li shown faint)
     litFull: new Set([1,2]),      // fully-illuminated elements (Li starts faint, not here)
     cellsByZ: {}, // z -> array of {el, cellEl}
+    onCellClick: null,            // set by lab.js: (z) => void — "show me how this is made"
   };
 
   function buildGrid(container, {compact=false, interactive=true} = {}){
@@ -27,6 +28,8 @@
       cell.style.gridColumn = el.group;
       cell.style.gridRow = el.period;
       cell.textContent = el.sym;
+      cell.dataset.z = el.z;
+      cell.dataset.sym = el.sym;
       const zTag = document.createElement('span');
       zTag.className = 'z'; zTag.textContent = el.z;
       cell.appendChild(zTag);
@@ -37,6 +40,10 @@
         cell.addEventListener('mouseenter', (e)=> showTooltip(e, el));
         cell.addEventListener('mousemove', (e)=> positionTooltip(e));
         cell.addEventListener('mouseleave', hideTooltip);
+      }
+      if(interactive && !compact){
+        cell.style.cursor = 'pointer';
+        cell.addEventListener('click', ()=>{ if(PTable.onCellClick) PTable.onCellClick(el.z); });
       }
     });
     PTable.cellsByZ[compact ? 'intro' : 'lab'] = cells;
@@ -83,7 +90,12 @@
     cell.classList.add('pulse');
   }
 
-  function discoverMany(zs, opts){ zs.forEach((z,i)=> setTimeout(()=>discover(z,opts), i*90)); }
+  // Fills the table one element at a time rather than in a simultaneous
+  // burst, so discovery visibly reads as progress across the whole table.
+  function discoverMany(zs, opts={}){
+    const stagger = opts.stagger || 320;
+    zs.forEach((z,i)=> setTimeout(()=>discover(z, opts), i*stagger));
+  }
 
   function updateCount(){
     const el = document.getElementById('ptable-count');
@@ -103,8 +115,11 @@
     tooltipEl = tooltipEl || document.getElementById('elem-tooltip');
     if(!tooltipEl) return;
     const disc = PTable.discovered.has(el.z);
+    const undiscoveredHint = el.origin==='synthetic'
+      ? "Not found in nature — made artificially in laboratories."
+      : "Not yet discovered in your forge. Click to see how it could be made.";
     tooltipEl.innerHTML = `<b>${el.name} (${el.sym})</b> — Z=${el.z}<br>` +
-      (disc ? ORIGIN_NOTE[el.origin] : "Not yet discovered in your forge.");
+      (disc ? ORIGIN_NOTE[el.origin] : undiscoveredHint);
     tooltipEl.classList.add('show');
     positionTooltip(e);
   }
