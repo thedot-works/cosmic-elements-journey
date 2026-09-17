@@ -12,7 +12,13 @@ continuous journey, driven internally by a state machine
 
 ## Run it
 
-This is a fully static site — no build step, no server-side code.
+This is a fully static site — no build step, no server-side code required
+to develop it. **Important:** `index.html` loads `css/main.css` and the
+files under `js/` as relative sibling paths. If you ever copy or download
+`index.html` **by itself**, away from its `css/` and `js/` folders, the
+browser has nothing to load and you'll get an unstyled, plain-HTML page.
+Always keep the whole folder together — or use the single-file build
+below, which has no such requirement.
 
 ```bash
 # from the project root
@@ -20,13 +26,30 @@ python3 -m http.server 8000
 # then open http://localhost:8000/
 ```
 
-Or just open `index.html` directly in a modern desktop browser (Chrome,
-Edge, Firefox, Safari). It also works fine served from GitHub Pages —
-push this repo and enable Pages on the `main` branch / root folder.
+Opening `index.html` directly (double-click, or `file://.../index.html`)
+also works in any modern desktop browser, as long as the file stays inside
+this folder next to `css/` and `js/`. It works fine served from GitHub
+Pages too — push this repo and enable Pages on the `main` branch / root
+folder.
 
-No API keys, no dependencies to install, no bundler. `js/vendor/three.min.js`
+No API keys, no dependencies to install to develop it. `js/vendor/three.min.js`
 (Three.js r128) is vendored directly in the repo so the page works fully
 offline and doesn't depend on any third-party CDN being reachable.
+
+### Single-file build (share as one .html)
+
+If you want one file you can email, drop in a chat, or hand to someone
+without worrying about folder structure, build the bundled version:
+
+```bash
+node scripts/bundle.js
+# writes dist/cosmic-elements-journey.html — CSS and every script inlined
+```
+
+That file is fully self-contained (~0.7 MB) and works by itself from
+anywhere, including opened directly via `file://` with no server and no
+sibling folders. Regenerate it any time you change `index.html`, `css/`,
+or `js/`.
 
 ## How it works
 
