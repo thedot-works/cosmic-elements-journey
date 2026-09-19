@@ -23,10 +23,13 @@
     // next wait() call.
     const wait = ms=> new Promise(resolve=>{
       if(Theater.skip){ setTimeout(resolve, Math.min(40, ms)); return; }
+      // honour the global pacing scale, the same way Theater's ctx.wait does,
+      // so ?fast= and the demo tour compress this act along with the rest
+      const total = ms * (FX.timeScale || 1);
       let elapsed = 0; const STEP = 80;
       const tick = ()=>{
-        if(Theater.skip || elapsed >= ms){ resolve(); return; }
-        const next = Math.min(STEP, ms - elapsed);
+        if(Theater.skip || elapsed >= total){ resolve(); return; }
+        const next = Math.min(STEP, total - elapsed);
         elapsed += next;
         stage.timeout(tick, next);
       };

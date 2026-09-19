@@ -7,9 +7,10 @@
 // band explains what is on screen, and the app behaves exactly as it does
 // for a visitor. Nothing here fakes a result — every scene is the app's own.
 //
-//   ?demo          the full ~4 minute tour
-//   ?demo&nocursor hide the simulated pointer
-//   ?demo&speed=N  scale the app's internal pacing (default 0.62)
+//   ?demo            the full ~4 minute tour
+//   ?demo&nocursor   hide the simulated pointer
+//   ?demo&speed=N    scale the app's internal pacing (default 0.38)
+//   ?demo&minutes=N  stretch or compress the whole cut (default 4)
 // ==========================================================================
 (function(){
   const params = new URLSearchParams(location.search);
@@ -52,6 +53,7 @@
   function say(text){
     band.classList.add('show');
     bandText.innerHTML = text;
+    lastSayAt = clock();
   }
   function hideBand(){ band.classList.remove('show'); }
 
@@ -101,13 +103,17 @@
   }
 
   // ---- the tour clock -------------------------------------------------
-  let T0 = 0;
+  let T0 = 0, lastSayAt = -99;
   const clock = ()=> (Date.now() - T0)/1000;
+  const MIN_SAY = 5.5;   // no narration line is ever on screen for less than this
   // Hold until the tour clock reaches this mark, answering prompts while we
   // wait. Returns immediately if the mark has already passed, so a slow
-  // machine loses slack rather than drifting the whole schedule.
-  async function pace(mark){
-    while(clock() < mark){
+  // machine loses slack rather than drifting the whole schedule — except
+  // that the current line always gets long enough to be read, otherwise a
+  // beat that overran upstream would flash the next one past the viewer.
+  async function pace(mark, minSay = MIN_SAY){
+    const target = Math.max(mark, lastSayAt + minSay);
+    while(clock() < target){
       const pick = $('.choice-btn.recommended') || $('.choice-btn');
       if(pick){ await press(pick); continue; }
       await sleep(240);
@@ -203,27 +209,31 @@
     await pace(M(0.565));                      // ~2:16
 
     say('And here is what it actually makes — not one element. A single collision forges most of the heavy half of the periodic table at once.');
-    await paceUntil(()=> !!$('.yield-chip'), M(0.66));
-    await pace(M(0.70));                       // ~2:48
+    await paceUntil(()=> !!$('.yield-chip'), M(0.72));
+    await pace(M(0.75));                       // ~3:00
 
     // ---- 2:48 — the r-process
     chapter('The r-process');
     say('It then follows one of them down to the nucleus and walks through the r-process — rapid neutron capture — with the physics written out on the right.');
-    await paceUntil(()=> !!$('.explain-card'), M(0.76));
-    await pace(M(0.81));                       // ~3:14
+    await paceUntil(()=> !!$('.explain-card'), M(0.80));
+    await pace(M(0.835));                      // ~3:20
     say('An iron seed swallows neutrons faster than it can decay. Then, with none left to catch, it turns its own neutrons into protons — climbing one element with every flip.');
-    await pace(M(0.865));                      // ~3:28
+    await pace(M(0.88));                       // ~3:31
 
     // ---- 3:28 — gold, and the closing act
     chapter('Follow your gold');
     skip();
-    await paceUntil(()=> !!$('.reveal-card.show'), M(0.90));
+    await paceUntil(()=> !!$('.reveal-card.show'), M(0.93));
     say('Gold is the one it follows all the way home.');
-    await pace(M(0.925));                      // ~3:42
+    await pace(M(0.945));                      // ~3:47
     await press($('#exp-actions .exp-btn.gold') || $('#exp-actions .exp-btn'));
     say('Out of the collision, into the Milky Way, into the cloud that became the Sun — and into the Earth, which inherited it.');
-    await paceUntil(()=> !!$('.age-compare'), M(0.985));
-    await pace(M(0.99));                       // ~3:57
+    // The piece is meant to end on Earth, so wait for that frame properly
+    // rather than on a fraction of the total: on a slow machine the closing
+    // scenes take longer to build, and ending on time on the wrong image
+    // would be the worse trade. On normal hardware this adds nothing.
+    await paceUntil(()=> !!$('.age-compare'), clock() + 75);
+    await pace(clock() + 5);
 
     hideBand();
     await sleep(900);
