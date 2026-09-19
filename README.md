@@ -179,6 +179,40 @@ node scripts/bundle.js                   # single-file build
 `?fast=0.3` speeds every sequence up for testing, `?hq` pins render quality, and
 `dev/specimens.html?from=1&to=118` renders the whole specimen set on one page.
 
+## Recording the showcase video
+
+Open the page with `?demo` and it runs itself, hands-free, for about four
+minutes — a simulated pointer clicks the real controls, a narration band
+explains each screen, and nothing is faked or pre-rendered. It exists so a
+showcase recording is one take with no one driving:
+
+```
+index.html?demo               the full tour
+index.html?demo&nocursor      same, without the simulated pointer
+index.html?demo&speed=0.5     tighter pacing (default 0.62)
+```
+
+The tour runs: title card → the premise → the Forge workspace → building a
+chosen element (carbon, in an ageing star) → free play with two neutron stars
+→ the merger and the full spread of elements it forges → the r-process with
+its written panel → gold → the closing journey to Earth → end card.
+
+To record it, on a machine with a GPU:
+
+1. Serve the folder (`python3 -m http.server 8000`) and open
+   `http://localhost:8000/index.html?demo`. The single-file build works too:
+   `cosmic-elements-journey.html?demo`.
+2. Press **F11** for fullscreen, and check sound is unmuted — the score is
+   generated live, and the reactions are audible.
+3. Start the recorder **before** the title card appears: Xbox Game Bar
+   (**Win+G**) on Windows, **Shift+Cmd+5** on macOS, or OBS at 1080p60.
+4. Stop once the end card fades. Trim the first second if the recorder's own
+   chrome is in frame.
+
+A GPU is what matters here: the piece runs at 60fps on normal hardware, but
+in a software-rendering environment (a CI box, a cloud container with no GPU)
+it drops to 1–2fps, and a capture taken there is unusable.
+
 ## Browser support / performance
 
 Targets desktop Chrome, Edge, Firefox and Safari. Render quality adapts down

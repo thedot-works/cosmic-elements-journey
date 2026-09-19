@@ -177,6 +177,15 @@
              <div class="hud-row"><span>Free neutrons</span><b>Enough to build every element past iron</b></div>`);
     await ctx.wait(3400);
 
+    // When no particular element was asked for, the honest answer to "what
+    // does this collision make?" is the whole band at once — not just the
+    // famous one. Show all of it, then follow one nucleus down.
+    if(ctx.mode !== 'target'){
+      ctx.hud(null);
+      ctx.cap('IT DOES NOT MAKE ONE ELEMENT.', 'A single merger forges most of the heavy half of the periodic table in the same second.');
+      await U.harvest(ctx, 'merger', p.z);
+    }
+
     // scale dive into the debris
     ctx.cap('FOLLOW ONE PACKET OF DEBRIS.', 'Down, and down, and down.');
     await U.scaleDive(ctx, [['100 km','glowing debris'],['1 km','debris'],['1 m','matter'],['1 mm','matter'],
@@ -208,8 +217,16 @@
     seed.setLabel('<b>\u2075\u2076Fe</b><span>an iron seed nucleus</span>', { offset:[0, -Math.round(58 + endA*0.42)] });
     await FX.cam.to(V3(0, 2, 18 + Nuclear.radiusOf(endA)*6.4), V3(0,0,0), 1400);
     chart.seed(SEED_Z, SEED_N);
-    ctx.explain('The <b>r-process</b> — rapid neutron capture. In the neutron-hurricane right after the merger, ' +
-      'this nucleus grabs free neutrons far faster than it can decay. It only pauses to decay once it is packed as full as it can get.');
+    ctx.explain({
+      label: 'THE R-PROCESS',
+      step: 'Phase 1 of 4',
+      title: 'An iron seed, dropped into a flood of neutrons',
+      body: 'Everything heavier than iron needs neutrons, and it needs them faster than it can fall apart. ' +
+        'That is the whole idea behind the <b>r-process</b> — the <b>r</b> is for <b>rapid</b>. ' +
+        'The debris leaving this collision is the most neutron-rich matter in the universe: roughly ' +
+        'a hundred free neutrons for every seed nucleus like the iron-56 on screen.',
+      note: '<b>Watch the chart:</b> every neutron pushes the nucleus one square right. Every decay pushes it one square up.',
+    });
 
     let Z = SEED_Z, N = SEED_N, captured = 0, decayed = 0;
     const capturesTotal = Math.max(1, endA - SEED_A);
@@ -232,7 +249,10 @@
     async function capture(k){
       const shown = Math.min(k, 4);
       const jobs = [];
-      for(let i=0;i<shown;i++) jobs.push(seed.absorb('n', { ms: 170 + i*40, distance: 13 + seed.radius }));
+      for(let i=0;i<shown;i++){
+        jobs.push(seed.absorb('n', { ms: 170 + i*40, distance: 13 + seed.radius }));
+        setTimeout(()=> Ambient.capture(), 140 + i*55);
+      }
       await Promise.all(jobs);
       if(k > shown) seed.setComposition(Z, N + k);       // the rest of the burst
       for(let i=0;i<k;i++){ N++; chart.step(Z, N, 'capture'); }
@@ -240,6 +260,7 @@
       tick();
     }
     async function decay(ms){
+      Ambient.fuse('beta-');
       await seed.beta({ ms });
       Z++; N--; decayed++;
       chart.step(Z, N, 'beta');
@@ -250,12 +271,21 @@
     // a few single captures, slow enough to see what one capture does
     for(let i=0;i<5 && captured<capturesTotal; i++){
       if(ctx.skipped()) break;
+      Ambient.capture();
       await seed.absorb('n', { ms: 300, distance: 12 + seed.radius });
       N++; captured++; chart.step(Z, N, 'capture'); tick();
     }
     seed.setLabel(isoOf(Z, N));
     ctx.cap('THE NUCLEUS FILLS UP WITH NEUTRONS.', 'It can only hold so many. When it is overloaded, one neutron turns into a proton — and the climb carries on one element higher.');
-    ctx.explain('<b>Neutron capture:</b> a free neutron sticks to the nucleus. It gets heavier, but stays the same element — the proton count, and so the element, hasn\'t changed yet.');
+    ctx.explain({
+      label: 'THE R-PROCESS',
+      step: 'Phase 2 of 4',
+      title: 'Neutron capture — heavier, but still the same element',
+      body: 'A free neutron sticks to the nucleus and stays. The nucleus gets heavier with every one it swallows, ' +
+        'but it does <b>not</b> change element: what names an element is its proton count, and no protons have been added. ' +
+        'Iron with thirty extra neutrons is still iron — just a wildly unstable version of it.',
+      note: '<b>Why it has to be fast:</b> these overloaded nuclei would normally decay in a fraction of a second. Here the next neutron arrives first.',
+    });
     await ctx.wait(2400);
 
     // the zig-zag: capture, capture, capture, one beta, and again
@@ -277,8 +307,26 @@
 
     seed.pulse('#bcd6ff', 1.2);
     ctx.cap('THE NEUTRONS RUN OUT.', `Freeze-out. What is left is a wildly neutron-rich nucleus, and now nothing is holding it together — it decays back toward stability.`);
-    ctx.explain('<b>Beta decay:</b> with no free neutrons left to grab, the overloaded nucleus starts flipping its own neutrons into protons instead — and each flip climbs one element higher on the periodic table.');
+    ctx.explain({
+      label: 'THE R-PROCESS',
+      step: 'Phase 3 of 4',
+      title: 'Freeze-out — the neutrons run out',
+      body: 'Within about a second the debris has expanded and thinned, and there are no free neutrons left to catch. ' +
+        'What remains is a nucleus carrying far more neutrons than it can hold together, ' +
+        'with nothing left to stop it from falling apart.',
+      note: 'Everything after this point is the nucleus repairing itself — and that is where the new elements appear.',
+    });
     await ctx.wait(2600);
+
+    ctx.explain({
+      label: 'THE R-PROCESS',
+      step: 'Phase 4 of 4',
+      title: 'Beta decay — this is where new elements appear',
+      body: 'With no neutrons left to catch, the nucleus fixes itself from the inside: a surplus neutron turns into a proton ' +
+        'and throws out an electron. The mass barely changes, but the proton count goes up by one — ' +
+        'and the proton count <b>is</b> the element. Each decay is a step up the periodic table.',
+      note: 'This is the moment the heavy elements are actually made. Everything before it was only loading the nucleus up.',
+    });
 
     // the cascade back: A stays put, each decay moves one step up in Z
     for(let i=0; i<betasAfter; i++){

@@ -36,6 +36,7 @@ const scriptSrcs = [
   'js/theater/reveal.js',
   'js/gold-journey.js',
   'js/app.js',
+  'js/demo.js',
 ];
 
 scriptSrcs.forEach(src => {

@@ -349,6 +349,8 @@
       if(H) H.highlight(si);
       if(ctx.skipped && ctx.skipped()) break;
       if(ctx.explain && o.explain !== false) ctx.explain(MODE_EXPLAIN[st.mode] || null);
+      // one sound per reaction, so you hear the element being assembled
+      if(window.Ambient && Ambient.fuse) Ambient.fuse(st.mode);
       lastMain = await playStep(ctx, st, live, lastMain, o);
       await wait(st.half ? 2300 : 1800);
     }

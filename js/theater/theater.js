@@ -130,20 +130,45 @@
         requestAnimationFrame(()=> node.classList.add('show'));
         return node;
       },
-      // A short plain-English note on what the reaction is actually doing
-      // right now — lives next to the chart on the right. Calling it again
-      // updates the same card in place rather than stacking new ones; pass
+      // The written explanation of what the reaction is actually doing right
+      // now — a panel next to the chart on the right. Calling it again
+      // updates the same panel in place rather than stacking new ones; pass
       // null to remove it early.
-      explain(html){
+      //
+      // Takes either a plain string (just the description) or
+      // { label, step, title, body, note } for the fuller treatment used by
+      // the r-process, where the phase heading and the step counter are what
+      // turn hundreds of neutron captures into a story you can follow.
+      explain(spec){
         const host = $('exp-side');
         if(!host) return null;
-        if(html == null){ if(explainNode){ explainNode.remove(); explainNode = null; } return null; }
+        if(spec == null){ if(explainNode){ explainNode.remove(); explainNode = null; } return null; }
+        const o = typeof spec === 'string' ? { body: spec } : (spec || {});
         if(!explainNode){
-          explainNode = el('div', 'explain-card', `<div class="explain-label">WHAT'S HAPPENING</div><div class="explain-body"></div>`);
+          explainNode = el('div', 'explain-card',
+            `<div class="explain-head">
+               <div class="explain-label"></div>
+               <div class="explain-step"></div>
+             </div>
+             <div class="explain-inner">
+               <div class="explain-title"></div>
+               <div class="explain-body"></div>
+               <div class="explain-note"></div>
+             </div>`);
           host.appendChild(explainNode);
           requestAnimationFrame(()=> explainNode.classList.add('show'));
         }
-        explainNode.querySelector('.explain-body').innerHTML = html;
+        const set = (sel, html)=>{
+          const n = explainNode.querySelector(sel);
+          if(!n) return;
+          n.innerHTML = html || '';
+          n.style.display = html ? '' : 'none';
+        };
+        set('.explain-label', o.label || "WHAT'S HAPPENING");
+        set('.explain-step', o.step || '');
+        set('.explain-title', o.title || '');
+        set('.explain-body', o.body || '');
+        set('.explain-note', o.note || '');
         return explainNode;
       },
       chart(opts){
@@ -178,6 +203,8 @@
     ctx.mode = opts.mode || 'free';
     ctx.site = opts.site;
     open();
+    // give each site its own harmonic colour before anything starts
+    if(window.Ambient && Ambient.mood) Ambient.mood(opts.site);
     const restore = { star: Cosmos.layers.stars[0].u.uOpacity.value, neb: Cosmos.layers.nebula.children[0].material.opacity,
       bloom: FX.post.bloomStrength, exposure: FX.post.exposure, sat: FX.post.saturation, vig: FX.post.vignette };
     try {

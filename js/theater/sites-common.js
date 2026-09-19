@@ -100,6 +100,68 @@
     return { A:+m[1], sym:m[2], Z, N:+m[1]-Z, label: ElementProfiles.sup(+m[1]) + m[2] };
   };
 
+  // ---------------------------------------------------------------- yield
+  // Every element one event actually forges, revealed at once.
+  //
+  // A neutron-star merger does not make gold. It makes a whole band of the
+  // periodic table in the same second, and gold happens to be the famous
+  // one. When the visitor combines objects without naming a target, that
+  // breadth is the answer to "what does this do?" — so show all of it, mark
+  // the one we are about to follow, and light up the map as it goes.
+  U.harvest = async function(ctx, site, featuredZ, opts={}){
+    const all = ElementProfiles.elementsForSite(site) || [];
+    if(!all.length) return null;
+    const profs = all.map(z=> ElementProfiles.get(z)).filter(Boolean).sort((a,b)=> a.z - b.z);
+    const first = profs[0], last = profs[profs.length-1];
+
+    const wrap = document.createElement('div');
+    wrap.className = 'yield-wrap';
+    wrap.innerHTML =
+      `<div class="yield-title">${opts.title || 'What this one collision forges'}</div>
+       <div class="yield-sub">${opts.sub ||
+          `<b>${profs.length} elements</b> at once — from ${first.name.toLowerCase()} (${first.z}) to ${last.name.toLowerCase()} (${last.z}). ` +
+          `Not one element at a time: the whole band, in about a second.`}</div>
+       <div class="yield-grid"></div>
+       <div class="yield-foot"></div>`;
+    const grid = wrap.querySelector('.yield-grid');
+    const foot = wrap.querySelector('.yield-foot');
+    profs.forEach(p=>{
+      const chip = document.createElement('div');
+      chip.className = 'yield-chip' + (p.z === featuredZ ? ' featured' : '');
+      chip.dataset.z = p.z;
+      chip.innerHTML = `<b>${p.sym}</b><span>${p.name}</span><i>${p.z}</i>`;
+      grid.appendChild(chip);
+    });
+    ctx.stage.dom(wrap, document.getElementById('exp-body'));
+    requestAnimationFrame(()=> wrap.classList.add('show'));
+
+    // cascade them in, discovering each one on the map as it lands
+    const step = opts.step || 85;
+    for(const p of profs){
+      if(ctx.skipped()) break;
+      const chip = grid.querySelector(`.yield-chip[data-z="${p.z}"]`);
+      if(chip) chip.classList.add('show');
+      PTable.discover(p.z);
+      Ambient.capture();
+      await ctx.wait(step);
+    }
+    // anything the skip raced past still belongs to the visitor
+    grid.querySelectorAll('.yield-chip:not(.show)').forEach(c=>{
+      c.classList.add('show'); PTable.discover(+c.dataset.z);
+    });
+    PTable.updateCount && PTable.updateCount();
+
+    const featured = ElementProfiles.get(featuredZ);
+    foot.innerHTML = featured
+      ? `All of them, from the same event. We will follow <b>${featured.name.toLowerCase()}</b> — one nucleus, all the way down.`
+      : 'All of them, from the same event.';
+    await ctx.wait(opts.hold || 3400);
+    wrap.classList.remove('show');
+    await ctx.wait(500);
+    wrap.remove();
+    return profs;
+  };
+
   // ---------------------------------------------------------------- verdicts
   U.verdict = async function(ctx, { word, cls, sub, next }){
     const box = document.createElement('div');

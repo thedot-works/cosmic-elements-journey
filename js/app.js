@@ -5,7 +5,10 @@
 // to a new scene — every transition is a continuous visual move.
 // ==========================================================================
 (function(){
-  const App = { state: 'boot', muted: true, mode: 'story' };
+  // Sound is on by default — the score is part of the piece, not an extra.
+  // Nothing can actually be heard until the first gesture unlocks the audio
+  // context (browser policy), which wireFirstInteractionAudio handles.
+  const App = { state: 'boot', muted: false, mode: 'story' };
 
   function boot(){
     const canvas = document.getElementById('scene-canvas');
@@ -29,8 +32,19 @@
   }
 
   function wireFirstInteractionAudio(){
-    const unlock = ()=>{ Ambient.unlock(); Ambient.setMuted(App.muted); window.removeEventListener('pointerdown', unlock); };
-    window.addEventListener('pointerdown', unlock, { once:true });
+    // A browser will not let an AudioContext make a sound until the user has
+    // interacted with the page, so the score starts on whichever comes first
+    // — a click, a tap or a keypress.
+    const unlock = ()=>{
+      Ambient.unlock();
+      Ambient.setMuted(App.muted);
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+      window.removeEventListener('touchstart', unlock);
+    };
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    window.addEventListener('touchstart', unlock);
   }
 
   function enterLab(){
