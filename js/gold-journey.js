@@ -10,6 +10,11 @@
   const $ = id=> document.getElementById(id);
   const el = (tag, cls, html)=>{ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; };
 
+  // Thrown from bail() to unwind the whole journey the instant a Skip is
+  // seen — never caught as a real error, just a fast way out of deeply
+  // nested awaits without threading a "was skipped?" flag through every step.
+  const SKIP = Symbol('gold-journey-skip');
+
   async function run(target){
     const stage = FX.stage('goldjourney');
     // Skip-aware, like Theater's ctx.wait: polls in short slices so a Skip
@@ -26,6 +31,15 @@
       };
       tick();
     });
+    // Skip here means "I don't want to watch this" — the journey visits half
+    // a dozen full 3-D scenes (a cloud, a star system, a planet, a galaxy),
+    // each of which takes real time to build no matter how short the waits
+    // between them are. Racing through every scene anyway is what made Skip
+    // feel broken here even though it worked fine during the reaction itself.
+    // So instead of just shortening the pauses, a Skip during this act jumps
+    // straight out and back to the Forge, checked before each new scene is
+    // built rather than only between waits.
+    const bail = ()=>{ if(Theater.skip) throw SKIP; };
     const cap = (a,b)=> ExpUI.caption(a,b);
     const body = ()=> $('exp-body');
     const say = (html, opts={})=>{
@@ -40,6 +54,8 @@
     Cosmos.fadeStars(0.55, 900); Cosmos.fadeNebula(0.18, 900);
     FX.post.bloomStrength = 0.95; FX.post.vignette = 0.4;
     $('exp-side').innerHTML = '';
+
+    try {
 
     // ---------------- 1. riding the kilonova debris
     cap('FOLLOW YOUR GOLD.', 'One nucleus among trillions, thrown outward at a tenth of the speed of light.');
@@ -57,6 +73,7 @@
     await wait(1600);
 
     // ---------------- 2. the molecular cloud
+    bail();
     const st2 = FX.stage('cloud'); stage.children.push(st2);
     const cloud = FX.pointCloud({ stage: st2, count:12000, opacity:0.75, twinkle:0.1, spin:0.04,
       gen:()=>{ const r = 150*Math.pow(Math.random(),0.55), th=Math.random()*6.283, ph=Math.acos(Math.random()*2-1);
@@ -67,6 +84,7 @@
     await wait(1700);
 
     // ---------------- 3. collapse into a new star
+    bail();
     cap('THEN SOMETHING NUDGES IT.', 'Gravity takes over, and the cloud begins to fall inward.');
     readout('<b>~4.6 billion years ago</b><span>our solar system begins</span>');
     await FX.animate(2400, k=>{ cloud.u.uExpand.value = 1 - 0.82*k; cloud.u.uOpacity.value = 0.75 - 0.35*k; }, FX.ease.in);
@@ -80,6 +98,7 @@
     await wait(1800);
 
     // ---------------- 4. Earth forms
+    bail();
     const st3 = FX.stage('earth'); stage.children.push(st3);
     FX.animate(1600, k=>{ disk.u.uOpacity.value = 1-k; cloud.u.uOpacity.value = 0.4*(1-k); });
     const earth = FX.earth({ stage: st3, radius:14, molten:1 });
@@ -96,6 +115,7 @@
     await wait(2000);
 
     // ---------------- 5. how old is gold
+    bail();
     cap('HOW OLD IS GOLD?', '');
     await wait(900);
     const imagine = say('Imagine: the gold in your jewellery could be this old.', { cls:'mid', top:'40%', hold:false });
@@ -120,6 +140,7 @@
     compare.remove();
 
     // ---------------- 6. out of the ground, onto a hand
+    bail();
     cap('FROM THE GROUND TO YOUR HAND.', '');
     $('exp-hud').innerHTML = '';   // the timeline readout has done its job
     st3.dispose(); st2.dispose();  // leave Earth, the Sun and the disk behind
@@ -137,6 +158,7 @@
     refine.remove();
 
     // ---------------- 7. the ring
+    bail();
     const st4 = FX.stage('ring'); stage.children.push(st4);
     Cosmos.fadeStars(0.2, 900);
     Specimen.studio(st4, {});
@@ -162,6 +184,7 @@
     big.classList.remove('show'); sub.classList.remove('show');
 
     // ---------------- 8. pull back to the galaxy
+    bail();
     FX.animate(2600, k=>{ ring.scale.setScalar(1 - 0.85*k); });
     Cosmos.fadeStars(1.0, 2200); Cosmos.fadeNebula(0.3, 2200);
     const st5 = FX.stage('galaxyEnd'); stage.children.push(st5);
@@ -175,7 +198,12 @@
     f1.classList.remove('show'); f2.classList.remove('show');
     await wait(800);
     await Theater.actionButton('Return to the forge', { cls:'ghost' });
-    stage.dispose();
+
+    } catch(e){
+      if(e !== SKIP) throw e;
+    } finally {
+      stage.dispose();
+    }
   }
 
   window.GoldJourney = { run };

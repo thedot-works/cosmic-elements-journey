@@ -308,10 +308,6 @@ html, body{
 .icon-btn{ width:34px; height:34px; border-radius:50%; border:1px solid var(--panel-border); background: var(--panel-bg);
   color:var(--ink-dim); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; backdrop-filter: blur(8px); }
 
-#exp-close-btn{ display:none; opacity:0; transition: opacity .3s ease, color .2s ease, border-color .2s ease; }
-#exp-close-btn.show{ display:flex; opacity:0.85; }
-#exp-close-btn:hover{ opacity:1; color:#fff; border-color: rgba(255,140,140,0.55); }
-
 /* There is no Story/Science split any more — the technical detail is always
    shown, so .science-only keeps whatever display it carries for layout. */
 

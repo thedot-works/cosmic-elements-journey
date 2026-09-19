@@ -18,13 +18,11 @@
     ['exp-body','exp-hud','exp-side','exp-foot','exp-actions','fx-labels'].forEach(id=>{ const n = $(id); if(n) n.innerHTML = ''; });
     caption('', '');
     $('exp-skip').classList.add('show');
-    const c = $('exp-close-btn'); if(c) c.classList.add('show');
   }
   function close(){
     $('experiment-root').classList.remove('active');
     document.getElementById('lab-root').classList.remove('dimmed');
     $('exp-skip').classList.remove('show');
-    const c = $('exp-close-btn'); if(c) c.classList.remove('show');
     ['exp-body','exp-hud','exp-side','exp-foot','exp-actions','fx-labels'].forEach(id=>{ const n = $(id); if(n) n.innerHTML = ''; });
   }
   function caption(l1, l2){
@@ -206,13 +204,11 @@
     if(window.Lab && Lab.afterExperiment) Lab.afterExperiment();
   }
 
-  // Skip button — fast-forwards to the reveal. Close (✕) — bails out to the
-  // Forge entirely, skipping the reveal too.
+  // Skip — fast-forwards to the reveal (or, during the gold journey's
+  // closing act, bails straight back to the Forge; see gold-journey.js).
   document.addEventListener('DOMContentLoaded', ()=>{
     const s = $('exp-skip');
     if(s) s.addEventListener('click', ()=>{ if(Theater.busy) Theater.skip = true; });
-    const c = $('exp-close-btn');
-    if(c) c.addEventListener('click', ()=>{ if(Theater.busy){ Theater.skip = true; Theater.closeRequested = true; } });
   });
 
   // ---------------------------------------------------------------- ExpUI (used by the gold journey)
