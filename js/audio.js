@@ -19,7 +19,7 @@
 // respected.
 // ==========================================================================
 (function(){
-  const LEVEL = 0.15;         // master level when unmuted
+  const LEVEL = 0.42;         // master level when unmuted
 
   let ctx=null, master=null, muted=false, started=false;
   let delay=null, feedback=null, wetGain=null;
@@ -41,8 +41,11 @@
     [2, 9, 14, 21, 26],    // up a whole step
     [-3, 4, 9, 16, 21],    // minor-ish, for the violent sites
   ];
-  const ROOT = 55;           // A1
-  const semi = n=> ROOT * Math.pow(2, n/12);
+  const ROOT = 55;           // A1 — the sub drone's home
+  const PAD_ROOT = 220;      // A3 — where the chord actually sings; at 55 Hz
+                             // the pad was inaudible on laptop speakers
+  const semi = n=> PAD_ROOT * Math.pow(2, n/12);
+  const subHz = n=> ROOT * Math.pow(2, n/12);
 
   function ensureCtx(){
     if(ctx) return;
@@ -59,7 +62,17 @@
       delay.connect(feedback); feedback.connect(delay);
       delay.connect(wetGain); wetGain.connect(master);
 
-      master.connect(ctx.destination);
+      // A limiter on the end of the chain, so raising the level cannot make a
+      // collision (which briefly stacks a swell, a noise burst and a chord
+      // change) clip on the way out.
+      const limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.value = -8;
+      limiter.knee.value = 6;
+      limiter.ratio.value = 12;
+      limiter.attack.value = 0.004;
+      limiter.release.value = 0.22;
+      master.connect(limiter);
+      limiter.connect(ctx.destination);
 
       // one second of white noise, reused by every wind/burst voice
       noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
@@ -94,7 +107,7 @@
       oscs.push({ osc, gain:g, drift });
     });
     // the sub follows the chord root, an octave below it
-    if(sub) sub.frequency.linearRampToValueAtTime(semi(intervals[0])/2, ctx.currentTime + fadeSec);
+    if(sub) sub.frequency.linearRampToValueAtTime(subHz(intervals[0]), ctx.currentTime + fadeSec);
   }
 
   function startPad(){
@@ -102,14 +115,14 @@
     started = true;
 
     padGain = ctx.createGain(); padGain.gain.value = 0;
-    filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 900; filter.Q.value = 0.5;
+    filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 1500; filter.Q.value = 0.5;
     padGain.connect(filter);
     filter.connect(master);
     filter.connect(delay);
 
     // slow filter "breathing" so the drone reads as alive, not a held note
     lfo = ctx.createOscillator(); lfo.frequency.value = 0.045;
-    const lfoGain = ctx.createGain(); lfoGain.gain.value = 300;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = 420;
     lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
     lfo.start();
 
@@ -257,8 +270,8 @@
       const now = ctx.currentTime;
       filter.frequency.cancelScheduledValues(now);
       filter.frequency.setValueAtTime(filter.frequency.value, now);
-      filter.frequency.linearRampToValueAtTime(2600, now+0.5);
-      filter.frequency.linearRampToValueAtTime(900, now+5);
+      filter.frequency.linearRampToValueAtTime(3600, now+0.5);
+      filter.frequency.linearRampToValueAtTime(1500, now+5);
       padGain.gain.cancelScheduledValues(now);
       padGain.gain.setValueAtTime(padGain.gain.value, now);
       padGain.gain.linearRampToValueAtTime(0.72, now+0.6);
@@ -286,16 +299,36 @@
     const now = ctx.currentTime;
     filter.frequency.cancelScheduledValues(now);
     filter.frequency.setValueAtTime(filter.frequency.value, now);
-    filter.frequency.linearRampToValueAtTime(dark ? 620 : 1100, now + 4);
+    filter.frequency.linearRampToValueAtTime(dark ? 1050 : 1800, now + 4);
   }
 
   function discoveryChime(){
     pulse(660,0.9,0.16); setTimeout(()=>pulse(880,1.1,0.14),120); setTimeout(()=>pulse(990,1.4,0.11),260);
   }
 
+  // A short confirmation that the score is actually running. "Is the sound
+  // even on?" is otherwise unanswerable from the interface — a drone fading
+  // in over four seconds is easy to miss, and the toggle looks the same
+  // whether or not the audio context ever started.
+  function toast(text){
+    let t = document.getElementById('audio-toast');
+    if(!t){
+      t = document.createElement('div');
+      t.id = 'audio-toast';
+      t.className = 'audio-toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = text;
+    t.classList.add('show');
+    clearTimeout(toast._h);
+    toast._h = setTimeout(()=> t.classList.remove('show'), 2600);
+  }
+
   function setMuted(v){
+    const was = muted;
     muted = v;
     if(master) master.gain.linearRampToValueAtTime(muted?0:LEVEL, (ctx?ctx.currentTime:0)+0.4);
+    if(was !== muted && started) toast(muted ? 'Sound off' : 'Sound on');
     // A distinct glyph from the other round icon, so the control never looks
     // ambiguous when audio happens to be muted.
     const btn = document.getElementById('mute-btn');
@@ -303,9 +336,16 @@
   }
 
   function unlock(){
+    const first = !started;
     ensureCtx();
     if(ctx && ctx.state==='suspended') ctx.resume();
     startPad();
+    if(first && ctx && !muted){
+      // the pad takes a few seconds to come up, so say so straight away
+      toast('Sound on');
+      const btn = document.getElementById('mute-btn');
+      if(btn) btn.classList.add('live');
+    }
   }
 
   window.Ambient = { unlock, setMuted, tick, fuse, capture, impact, mood, discoveryChime, isMuted: ()=>muted };

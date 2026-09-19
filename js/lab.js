@@ -146,10 +146,27 @@
   // ------------------------------------------------------------------ slots
   function selectObject(id){
     if(Lab.busy || Theater.busy) return;
+    // Picking objects by hand means the visitor is driving now, so a target
+    // chosen earlier on the map has to let go — otherwise the result slot
+    // keeps showing the old element as though these objects were going to
+    // produce it, which is exactly the thing it should never claim.
+    clearTarget();
     if(!Lab.slots.a){ fillSlot('a', id); }
     else if(!Lab.slots.b){ fillSlot('b', id); }
     else { fillSlot('a', id); Lab.slots.b = null; renderSlot('b'); }
     updateActivateState();
+  }
+
+  // Drop the chosen element and put the result slot back to "?" — used
+  // whenever the visitor starts building by hand, and after a run ends.
+  function clearTarget(){
+    if(Lab.targetZ == null) return;
+    Lab.targetZ = null;
+    document.querySelectorAll('#lab-ptable .pcell.target').forEach(c=> c.classList.remove('target'));
+    const hint = document.getElementById('hint-text');
+    if(hint){ hint.classList.remove('show'); hint.textContent = ''; }
+    clearLibraryHighlight();
+    updateFocus();
   }
   function fillSlot(slot, id){ Lab.slots[slot] = id; renderSlot(slot); }
   function clearSlot(slot){

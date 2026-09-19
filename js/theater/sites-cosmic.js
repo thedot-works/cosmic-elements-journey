@@ -104,8 +104,16 @@
     const grid = FX.spacetime({ stage, size:1100, segments:170, depth:70, sigma:44, spacing:26, color:'#4f7dff', opacity:0.8, position:V3(0,-55,0) });
     const nsA = FX.star({ stage, radius:2.2, temp:120000, granulation:30, brightness:3.0, glowScale:9, glow:0.7, corona:0.9 });
     const nsB = FX.star({ stage, radius:2.0, temp:110000, granulation:30, brightness:2.9, glowScale:9, glow:0.7, corona:0.9 });
-    const orbit = { ang:0, sep:150, omega:0.35, gw:0 };
+    const orbit = { ang:0, sep:150, omega:0.35, gw:0, merged:false };
     stage.onFrame(dt=>{
+      // Once they have merged there is one object at the centre, not two, so
+      // the pair of wells falls together into a single deep one and the
+      // orbital wobble winds down — otherwise the well keeps circling under
+      // stars that are no longer there.
+      if(orbit.merged){
+        orbit.sep -= orbit.sep * Math.min(1, 2.2*dt);
+        orbit.omega *= Math.exp(-1.6*dt);
+      }
       orbit.ang += orbit.omega*dt;
       const a = orbit.ang, rA = orbit.sep*0.5, rB = orbit.sep*0.5;
       nsA.group.position.set(Math.cos(a)*rA, 0, Math.sin(a)*rA);
@@ -134,23 +142,57 @@
     Ambient.impact();
     FX.cam.shake(3.6, 1400);
     nsA.group.visible = nsB.group.visible = false;
-    grid.u.uGW.value = 0; grid.u.uDepth.value = 150;
+    // these have to go through the orbit state, not the uniforms: the frame
+    // handler rewrites uGW and uDepth every tick, so assigning them here was
+    // overwritten before it ever reached the screen
+    orbit.gw = 0; orbit.merged = true;
     ctx.cap('MERGER.', 'For a moment, matter reaches densities nothing else in the universe achieves.');
     FX.burst(stage, { position:V3(0,0,0), count:2600, color:'#fff0d0', color2:'#8fb0ff', speed:200, size:2.6, life:2.6, drag:0.5, intensity:1.6 });
     await ctx.wait(1800);
 
-    // kilonova: blue polar ejecta, red equatorial ejecta, and a jet
+    // kilonova: blue polar ejecta, red equatorial ejecta, and polar jets
     ctx.cap('A KILONOVA.', 'Neutron-rich debris is flung out — and it glows for days as fresh radioactive atoms decay.');
-    const blue = FX.nebula({ stage, radius:60, count:5000, inner:'#bfe4ff', outer:'#6aa8ff', bipolar:true, squash:1.6, brightness:1.6, size:2.8 });
-    const red  = FX.nebula({ stage, radius:75, count:6000, inner:'#ff9a6a', outer:'#c0342a', squash:0.35, brightness:1.4, size:3.4, clumpy:true });
+    const blue = FX.nebula({ stage, radius:60, count:5000, inner:'#bfe4ff', outer:'#6aa8ff', bipolar:true, squash:1.6, brightness:1.6, size:2.8, spin:0.055 });
+    const red  = FX.nebula({ stage, radius:75, count:6000, inner:'#ff9a6a', outer:'#c0342a', squash:0.35, brightness:1.4, size:3.4, clumpy:true, spin:-0.04 });
     blue.u.uExpand.value = 0.1; red.u.uExpand.value = 0.1;
-    FX.animate(6000, t=>{ blue.u.uExpand.value = 0.1 + t*1.5; red.u.uExpand.value = 0.1 + t*1.1; }, FX.ease.out);
+    blue.u.uTwinkle.value = 0.30; red.u.uTwinkle.value = 0.20;
+
+    // The explosion is driven per frame rather than by one tween that ends,
+    // so it stays alive for the whole act instead of freezing into a still
+    // while the spacetime grid behind it carries on rippling.
+    //
+    // Three things are happening at once, and all three are real: the debris
+    // coasts outward with its expansion decelerating, it churns as it goes,
+    // and it dims — a kilonova's light comes from freshly made radioactive
+    // nuclei decaying, so it fades as they run out, which is exactly why the
+    // 2017 event was only visible for a couple of weeks.
+    const ejecta = { t:0, vB:0.50, vR:0.38 };
+    stage.onFrame(dt=>{
+      ejecta.t += dt;
+      const slow = Math.exp(-0.25*dt);         // frame-rate independent drag
+      ejecta.vB *= slow; ejecta.vR *= slow;
+      blue.u.uExpand.value += ejecta.vB * dt;
+      red.u.uExpand.value  += ejecta.vR * dt;
+      // the light curve: bright at first, then a long slow dim to a floor, with
+      // a slight churn on top so the cloud never reads as a static texture
+      const churn = 1 + 0.05*Math.sin(ejecta.t*0.9) + 0.03*Math.sin(ejecta.t*2.3);
+      const fade  = 0.52 + 0.48*Math.exp(-ejecta.t*0.05);
+      blue.u.uOpacity.value = Math.min(1, 0.95 * fade * churn);
+      red.u.uOpacity.value  = Math.min(1, 0.92 * Math.max(0.55, fade*1.05) * churn);
+      // as the shell spreads, its particles thin out — grow them a little so
+      // the cloud keeps its body instead of dissolving into specks
+      blue.u.uSizeMul.value = 1 + ejecta.t*0.012;
+      red.u.uSizeMul.value  = 1 + ejecta.t*0.010;
+    });
+
+    // Polar jets, spawning over a long window rather than one burst, so the
+    // outflow keeps streaming for as long as the kilonova is on screen.
     [1,-1].forEach(s=>{
-      FX.particles({ stage, count:700, drag:0.2, intensity:1.6, keep:false,
+      FX.particles({ stage, count:1100, drag:0.2, intensity:1.6, keep:false,
         spawn:()=>{ const r = Math.random()*6;
           const a = Math.random()*6.283;
           return { p:[Math.cos(a)*r, s*2, Math.sin(a)*r], v:[Math.cos(a)*6, s*(120+Math.random()*90), Math.sin(a)*6],
-            c: FX.lin('#dfe9ff').multiplyScalar(1.4), s:2.0, d:Math.random()*0.7, l:2.6 }; }});
+            c: FX.lin('#dfe9ff').multiplyScalar(1.4), s:2.0, d:Math.random()*18, l:2.6 }; }});
     });
     ctx.hud(`<div class="hud-row"><span>Ejected</span><b>Thousands of Earth-masses of heavy elements</b></div>
              <div class="hud-row science-only"><span>Observed</span><b>GW170817 — 17 August 2017, 130 million light-years away</b></div>`);
