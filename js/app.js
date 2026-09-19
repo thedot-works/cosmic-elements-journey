@@ -21,14 +21,7 @@
   }
 
   function wireTopControls(){
-    document.querySelectorAll('#mode-toggle button').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('#mode-toggle button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        App.mode = btn.dataset.mode;
-        document.body.classList.toggle('science-mode', App.mode === 'science');
-      });
-    });
+    // There is no Story/Science split: every piece of detail is always shown.
     document.getElementById('mute-btn').addEventListener('click', ()=>{
       App.muted = !App.muted;
       Ambient.setMuted(App.muted);

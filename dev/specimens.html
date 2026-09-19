@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Specimen contact sheet — all 118</title>
+<style>
+  body{ margin:0; background:#05070d; color:#dfe7ff; font:13px -apple-system, Segoe UI, sans-serif; }
+  #sheet{ display:block; width:100%; }
+  #hidden{ position:fixed; left:-4000px; top:0; }
+  #status{ position:fixed; right:10px; top:8px; font-size:12px; color:#8fa4cc; }
+</style>
+</head>
+<body>
+<div id="status">building…</div>
+<canvas id="sheet"></canvas>
+<canvas id="hidden" width="8" height="8"></canvas>
+
+<script src="../js/vendor/three.min.js"></script>
+<script src="../js/elements-data.js"></script>
+<script src="../js/data/element-profiles.js"></script>
+<script src="../js/data/element-profiles-2.js"></script>
+<script src="../js/fx/core.js"></script>
+<script src="../js/fx/objects.js"></script>
+<script src="../js/fx/specimen.js"></script>
+<script>
+// Renders every element's specimen into one contact sheet, so the whole set can
+// be checked at a glance (colour, phase, form, glow).
+(async function(){
+  const COLS = 10, CELL = 176, CELL_H = 150, SS = 2;   // SS = supersample factor
+  const params = new URLSearchParams(location.search);
+  const from = parseInt(params.get('from')||'1',10), to = parseInt(params.get('to')||'118',10);
+  const n = to - from + 1;
+  const rows = Math.ceil(n/COLS);
+
+  const sheet = document.getElementById('sheet');
+  sheet.width = COLS*CELL; sheet.height = rows*CELL_H;
+  const g = sheet.getContext('2d');
+  g.fillStyle = '#05070d'; g.fillRect(0,0,sheet.width,sheet.height);
+
+  const rc = document.createElement('canvas');
+  rc.width = CELL*SS; rc.height = CELL_H*SS;
+  const renderer = new THREE.WebGLRenderer({ canvas: rc, antialias:true, alpha:false });
+  renderer.setPixelRatio(1);
+  renderer.setSize(CELL*SS, CELL_H*SS, false);
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(32, CELL/CELL_H, 0.1, 400);
+  FX.init(renderer, scene, cam);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  // FX.init sizes the renderer to the window; put it back to one tile.
+  renderer.setSize(CELL*SS, CELL_H*SS, false);
+  cam.aspect = CELL/CELL_H; cam.updateProjectionMatrix();
+  cam.position.set(0, 1.95, 7.6); cam.lookAt(0, 1.05, 0);
+  scene.add(new THREE.AmbientLight(FX.lin('#2b3a5c'), 0.55));
+  const back = new THREE.Mesh(new THREE.SphereBufferGeometry(80, 24, 12), new THREE.MeshBasicMaterial({
+    color: FX.lin('#070a12'), side: THREE.BackSide }));
+  scene.add(back);
+
+  function shim(){
+    const S = { fns:[], group:new THREE.Group() };
+    scene.add(S.group);
+    S.add = (o,parent)=>{ (parent||S.group).add(o); return o; };
+    S.onFrame = fn=>{ S.fns.push(fn); return ()=>{}; };
+    S.label = ()=>({ set(){}, remove(){} });
+    S.dom = el=> el; S.timeout = (fn,ms)=> setTimeout(fn,ms); S.track = ()=>{};
+    S.kill = ()=>{ scene.remove(S.group); S.group.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); };
+    return S;
+  }
+
+  const status = document.getElementById('status');
+  Specimen.studio({ add:(o)=>{ scene.add(o); return o; } }, {});
+
+  for(let i=0;i<n;i++){
+    const z = from + i;
+    const p = ElementProfiles.get(z);
+    const S = shim();
+    let built = null;
+    try { built = Specimen.build(S, p, { target: 2.2 }); }
+    catch(e){ console.error('specimen failed', z, p.sym, e.message); }
+    // let time-based effects settle, then render
+    for(let f=0; f<26; f++){
+      S.fns.forEach(fn=>{ try{ fn(0.05, f*0.05); }catch(e){} });
+      if(built) built.group.rotation.y = -0.55;
+      FX.update(0.05);
+    }
+    // point-sprite sizing for this small viewport
+    S.group.traverse(o=>{ if(o.material && o.material.uniforms && o.material.uniforms.uScale) o.material.uniforms.uScale.value = CELL_H*SS*0.5; });
+    renderer.render(scene, cam);
+    const col = i % COLS, row = Math.floor(i/COLS);
+    g.drawImage(rc, col*CELL, row*CELL_H, CELL, CELL_H);
+    g.font = 'bold 12px -apple-system, Segoe UI, sans-serif';
+    g.fillStyle = '#e6eeff';
+    g.fillText(`${p.z} ${p.sym}`, col*CELL + 8, row*CELL_H + 16);
+    g.font = '10px -apple-system, Segoe UI, sans-serif';
+    g.fillStyle = 'rgba(180,200,240,0.65)';
+    g.fillText(p.look.form, col*CELL + 8, row*CELL_H + CELL_H - 8);
+    g.strokeStyle = 'rgba(120,150,220,0.16)';
+    g.strokeRect(col*CELL, row*CELL_H, CELL, CELL_H);
+    S.kill();
+    status.textContent = `${z} / ${to}`;
+    if(i % 6 === 0) await new Promise(r=> setTimeout(r, 0));
+  }
+  status.textContent = 'done';
+  document.title = 'SHEET READY';
+})();
+</script>
+</body>
+</html>

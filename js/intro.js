@@ -99,7 +99,7 @@
     await sleep(900);
     if(skipped) return;
 
-    setText('How did the universe create Gold?', {cls:'big gold'});
+    setText('Every atom around you was built somewhere.', {cls:'big'});
     await sleep(1600);
     if(skipped) return;
     clearText();
@@ -109,15 +109,14 @@
     await sleep(700);
     if(skipped) return;
 
-    setText('You Are The Universe.', {cls:'big'});
+    setText('Every Element Has An Origin Story.', {cls:'big'});
     await sleep(1000);
     if(skipped) return;
     const sub = document.createElement('div');
     sub.className = 'cine-text mid show';
-    sub.style.top = '58%';
-    sub.textContent = 'Build the elements. Discover what the cosmos can create.';
+    sub.textContent = 'Let\u2019s see how each one was formed in our universe.';
     stackEl().appendChild(sub);
-    await sleep(1300);
+    await sleep(1500);
     if(skipped) return;
 
     finish();
