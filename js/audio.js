@@ -212,79 +212,38 @@
   function tick(){ pulse(680, 0.08, 0.05); }
 
   // ---------------------------------------------------------------- events
-  // One sound per reaction step, keyed off the reaction type, so the score
-  // tracks what the nucleus on screen is actually doing.
+  // Event-triggered sounds have been removed in favor of pure ambient atmosphere.
+  // The breathing pad, drone, and sparse chimes create a meditative space without
+  // the constant sonic feedback of hundreds of reactions. The ambient itself is the
+  // score; the physics doesn't need to be sonically confirmed.
   function fuse(mode){
-    if(!ctx || muted) return;
-    const root = semi(CHORDS[chordIndex][0] + 24);
-    switch(mode){
-      case 'beta-': case 'beta+': case 'ec':
-        // a neutron flips into a proton: a short, bright falling blip
-        sweepTone(root*1.5, root*0.92, 0.5, 0.17, 'triangle');
-        break;
-      case 'alpha': case 'decay':
-        // something leaves: two-note fall, a little heavier
-        sweepTone(root, root*0.6, 0.7, 0.18, 'sine');
-        setTimeout(()=> pulse(root*0.5, 0.6, 0.11), 130);
-        break;
-      case 'fission': case 'spallation':
-        // a nucleus is broken apart: a crack, then debris
-        noiseHit(0.5, 0.24, 2600, 500, 0.7);
-        sweepTone(root*0.8, root*0.35, 0.6, 0.17, 'sawtooth');
-        break;
-      case 'capture':
-        capture();
-        break;
-      case 'recombination': case 'hadron':
-        // the very first structure in the universe: a soft bloom
-        sweepTone(root*0.7, root*1.25, 1.1, 0.15, 'sine');
-        noiseHit(0.8, 0.09, 700, 1800, 1.4);
-        break;
-      default:
-        // fusion: two nuclei become one — a rising bloom that lands in key
-        sweepTone(root*0.62, root*1.005, 0.85, 0.21, 'triangle');
-        noiseHit(0.42, 0.12, 900, 2400, 1.2);
-        setTimeout(()=> pulse(root*1.5, 0.9, 0.095), 260);
-    }
+    // Silenced: event sounds were creating anxiety rather than wonder
   }
 
-  // A single neutron sticking to a nucleus — used hundreds of times during
-  // the r-process, so it has to stay small and dry.
+  // A single neutron sticking to a nucleus — now silent to avoid overwhelming
+  // the r-process narration. The ambient pad provides all the audio context needed.
   function capture(){
-    if(!ctx || muted) return;
-    const root = semi(CHORDS[chordIndex][0] + 24);
-    const detune = 1 + (Math.random()-0.5)*0.06;
-    pulse(root*1.5*detune, 0.16, 0.085, 'sine');
-    noiseHit(0.1, 0.05, 1800, 3200, 2.0);
+    // Silenced: event sounds were jarring during rapid-fire captures
   }
 
-  // A collision: a deep swell, a brief brightening of the whole pad, and —
-  // the signature move — the drone hops to a new chord, so the music is
-  // audibly a different place after a merger or a supernova than before it.
+  // A collision: the drone shifts to a new chord, brightening the filter gently.
+  // No crash sounds—just a harmonic transition that feels like a shift in the cosmos.
   function impact(){
-    if(!ctx || muted) return;
-    pulse(90, 1.6, 0.32); setTimeout(()=>pulse(180,1.1,0.18), 80);
-    noiseHit(1.8, 0.26, 1400, 90, 0.5);
-    sweepTone(320, 42, 1.5, 0.21, 'sawtooth');
-    if(started){
-      const now = ctx.currentTime;
-      filter.frequency.cancelScheduledValues(now);
-      filter.frequency.setValueAtTime(filter.frequency.value, now);
-      filter.frequency.linearRampToValueAtTime(3600, now+0.5);
-      filter.frequency.linearRampToValueAtTime(1500, now+5);
-      padGain.gain.cancelScheduledValues(now);
-      padGain.gain.setValueAtTime(padGain.gain.value, now);
-      padGain.gain.linearRampToValueAtTime(0.72, now+0.6);
-      padGain.gain.linearRampToValueAtTime(0.5, now+5);
-      if(windGain){
-        windGain.gain.cancelScheduledValues(now);
-        windGain.gain.setValueAtTime(windGain.gain.value, now);
-        windGain.gain.linearRampToValueAtTime(0.2, now+0.7);
-        windGain.gain.linearRampToValueAtTime(0.085, now+6);
-      }
-      chordIndex = (chordIndex+1) % CHORDS.length;
-      buildChord(CHORDS[chordIndex], 2.6);
-    }
+    if(!ctx || muted || !started) return;
+    const now = ctx.currentTime;
+    // Gently brighten the filter, then settle back
+    filter.frequency.cancelScheduledValues(now);
+    filter.frequency.setValueAtTime(filter.frequency.value, now);
+    filter.frequency.linearRampToValueAtTime(2400, now+0.8);
+    filter.frequency.linearRampToValueAtTime(1500, now+4);
+    // Subtle lift in the pad
+    padGain.gain.cancelScheduledValues(now);
+    padGain.gain.setValueAtTime(padGain.gain.value, now);
+    padGain.gain.linearRampToValueAtTime(0.58, now+0.5);
+    padGain.gain.linearRampToValueAtTime(0.42, now+4);
+    // Shift to a new chord
+    chordIndex = (chordIndex+1) % CHORDS.length;
+    buildChord(CHORDS[chordIndex], 3.0);
   }
 
   // Each act gets its own colour: the violent sites sit on the darker chord,
