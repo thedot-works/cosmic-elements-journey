@@ -124,7 +124,7 @@
     stage.dom(compare, body());
     requestAnimationFrame(()=> compare.classList.add('show'));
     cap('THIS IS WHERE IT ENDED UP.', 'The gold you can wear was made before the Earth existed, and the Earth inherited it.');
-    await wait(2600);
+    await wait(3600);
 
     const big = say('THE GOLD YOU WEAR<br>IS OLDER THAN THE GROUND YOU STAND ON.', { cls:'big gold', top:'15%', hold:false });
     await wait(2600);
