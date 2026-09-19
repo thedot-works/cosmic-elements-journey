@@ -181,33 +181,39 @@ node scripts/bundle.js                   # single-file build
 
 ## Recording the showcase video
 
-Open the page with `?demo` and it runs itself, hands-free, for about four
+There is a built-in guided tour that runs itself, hands-free, for about four
 minutes — a simulated pointer clicks the real controls, a narration band
 explains each screen, and nothing is faked or pre-rendered. It exists so a
-showcase recording is one take with no one driving:
+showcase recording is one take with no one driving.
+
+**No server is needed.** Double-click `dist/cosmic-elements-journey.html`
+(the single-file build) and press **D**. That is the whole procedure.
+
+Three ways to start it, since the convenient one depends on how the page was
+opened:
 
 ```
-index.html?demo               the full tour
-index.html?demo&nocursor      same, without the simulated pointer
-index.html?demo&speed=0.5     tighter pacing (default 0.62)
+press D                       any time — nothing to type
+…/index.html?demo             starts automatically on load
+…/cosmic-elements-journey.html#demo    same, and easier to append by hand
 ```
+
+Options combine with either form: `&nocursor` hides the simulated pointer,
+`&speed=N` scales the app's internal pacing (default `0.38`), `&minutes=N`
+stretches or compresses the cut (default `4`).
 
 The tour runs: title card → the premise → the Forge workspace → building a
 chosen element (carbon, in an ageing star) → free play with two neutron stars
 → the merger and the full spread of elements it forges → the r-process with
 its written panel → gold → the closing journey to Earth → end card.
 
-To record it, on a machine with a GPU:
+To record it:
 
-1. Serve the folder (`python3 -m http.server 8000`) and open
-   `http://localhost:8000/index.html?demo`. The single-file build works too:
-   `cosmic-elements-journey.html?demo`.
-2. Press **F11** for fullscreen, and check sound is unmuted — the score is
-   generated live, and the reactions are audible.
-3. Start the recorder **before** the title card appears: Xbox Game Bar
-   (**Win+G**) on Windows, **Shift+Cmd+5** on macOS, or OBS at 1080p60.
-4. Stop once the end card fades. Trim the first second if the recorder's own
-   chrome is in frame.
+1. Open the file and press **F11** for fullscreen. Check sound is on — the
+   score is generated live and the reactions are audible.
+2. Start the recorder: Xbox Game Bar (**Win+G**) on Windows, **Shift+Cmd+5**
+   on macOS, or OBS at 1080p60.
+3. Press **D**, then leave it alone. Stop once the end card fades.
 
 A GPU is what matters here: the piece runs at 60fps on normal hardware, but
 in a software-rendering environment (a CI box, a cloud container with no GPU)

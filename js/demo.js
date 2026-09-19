@@ -2,19 +2,28 @@
 // DEMO — a hands-free guided tour of the real application, for recording a
 // showcase without anyone having to drive it.
 //
-// Open the page with ?demo and it runs itself for about four minutes: a
-// simulated cursor moves to the real controls and clicks them, a narration
-// band explains what is on screen, and the app behaves exactly as it does
-// for a visitor. Nothing here fakes a result — every scene is the app's own.
+// The tour runs itself for about four minutes: a simulated cursor moves to
+// the real controls and clicks them, a narration band explains what is on
+// screen, and the app behaves exactly as it does for a visitor. Nothing here
+// fakes a result — every scene is the app's own.
 //
-//   ?demo            the full ~4 minute tour
-//   ?demo&nocursor   hide the simulated pointer
-//   ?demo&speed=N    scale the app's internal pacing (default 0.38)
-//   ?demo&minutes=N  stretch or compress the whole cut (default 4)
+// Three ways to start it, because the easiest one depends on how the page was
+// opened — a file opened by double-clicking has an unwieldy path in the
+// address bar, and nobody wants to edit that with a recorder running:
+//
+//   press D          starts the tour, any time, no URL to edit
+//   ?demo / #demo    starts it automatically on load
+//   &nocursor        hide the simulated pointer
+//   &speed=N         scale the app's internal pacing (default 0.38)
+//   &minutes=N       stretch or compress the whole cut (default 4)
 // ==========================================================================
 (function(){
-  const params = new URLSearchParams(location.search);
-  if(!params.has('demo')) return;
+  // accept the options from either the query string or the hash, so
+  // "…journey.html#demo&minutes=5" works as well as "?demo&minutes=5"
+  const params = new URLSearchParams(
+    (location.search || '').replace(/^\?/, '') + '&' + (location.hash || '').replace(/^#/, '')
+  );
+  const AUTO = params.has('demo');
 
   const SPEED = parseFloat(params.get('speed') || '0.38');
   // The tour is written against an absolute clock rather than a chain of
@@ -242,11 +251,29 @@
   }
 
   // The tour only starts once the scene is up and the app has booted.
-  document.addEventListener('DOMContentLoaded', ()=>{
+  function startWhenReady(){
     const go = ()=>{
       if(window.FX && window.Theater && window.Lab && document.getElementById('skip-intro')) run();
       else setTimeout(go, 200);
     };
-    setTimeout(go, 900);
+    setTimeout(go, AUTO ? 900 : 0);
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    if(AUTO){ startWhenReady(); return; }
+    // Otherwise wait for D. Plain D only — Ctrl/Cmd/Alt combinations belong
+    // to the browser, and the app itself only listens for Enter and Escape.
+    document.addEventListener('keydown', e=>{
+      if(started) return;
+      if(e.key !== 'd' && e.key !== 'D') return;
+      if(e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target;
+      if(t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      e.preventDefault();
+      startWhenReady();
+    });
   });
+
+  // so a recording script (or the console) can trigger it too
+  window.Demo = { run: startWhenReady, isRunning: ()=> started };
 })();
